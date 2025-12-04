@@ -3,7 +3,7 @@
 Tests for Lane Lexicon StarDict converter.
 """
 
-import os
+import base64
 import shutil
 import tempfile
 import unittest
@@ -142,8 +142,6 @@ class TestLaneConverter(unittest.TestCase):
 
     def test_convert_dictd_to_tab(self):
         """Test dictd to tab conversion helper."""
-        import base64
-        
         converter = LaneConverter(self.source_dir, self.output_dir)
         
         # Create mock index file with proper base64 encoded offsets/lengths

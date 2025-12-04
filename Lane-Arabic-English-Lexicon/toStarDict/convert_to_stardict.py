@@ -20,8 +20,6 @@ Converted to Python 2024
 """
 
 import argparse
-import glob
-import os
 import re
 import subprocess
 import sys
