@@ -28,7 +28,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y dictd dictd-dev dictfmt dictzip libgtk2.0-0
+        sudo apt-get install -y dictd dictfmt dictzip libgtk2.0-0
     
     - name: Extract deps.7z
       run: |
