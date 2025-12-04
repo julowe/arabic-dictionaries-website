@@ -1,0 +1,82 @@
+name: Build Lane StarDict Dictionary
+
+on:
+  push:
+    paths:
+      - 'Lane-Arabic-English-Lexicon/source-lane/**'
+      - 'Lane-Arabic-English-Lexicon/toStarDict/convert_to_stardict.py'
+      - '.github/workflows/build-lane-stardict.yml'
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  build-stardict:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y dictd dictd-dev dictfmt dictzip
+    
+    - name: Extract deps.7z
+      run: |
+        sudo apt-get install -y p7zip-full
+        7z x deps.7z -odeps
+      working-directory: ${{ github.workspace }}
+    
+    - name: Make tabfile executable
+      run: |
+        chmod +x deps/tabfile
+      working-directory: ${{ github.workspace }}
+    
+    - name: Run conversion script
+      run: |
+        python3 convert_to_stardict.py \
+          --source-dir ../source-lane \
+          --output-dir ./output \
+          --tabfile ../../deps/tabfile
+      working-directory: ${{ github.workspace }}/Lane-Arabic-English-Lexicon/toStarDict
+    
+    - name: List generated files
+      run: |
+        ls -lah output/
+      working-directory: ${{ github.workspace }}/Lane-Arabic-English-Lexicon/toStarDict
+    
+    - name: Create zip file
+      run: |
+        mkdir -p StarDict-Lane-Lexicon
+        cp output/lane-lexicon.dict.dz StarDict-Lane-Lexicon/ || true
+        cp output/lane-lexicon.idx StarDict-Lane-Lexicon/ || true
+        cp output/lane-lexicon.ifo StarDict-Lane-Lexicon/ || true
+        zip -r StarDict-Lane-Lexicon.zip StarDict-Lane-Lexicon/
+      working-directory: ${{ github.workspace }}/Lane-Arabic-English-Lexicon/toStarDict
+    
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: StarDict-Lane-Lexicon
+        path: Lane-Arabic-English-Lexicon/toStarDict/StarDict-Lane-Lexicon.zip
+        retention-days: 90
+    
+    - name: Update dist directory
+      run: |
+        mkdir -p dist/stardict
+        cp Lane-Arabic-English-Lexicon/toStarDict/StarDict-Lane-Lexicon.zip dist/stardict/
+    
+    - name: Commit and push if changed
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git add dist/stardict/StarDict-Lane-Lexicon.zip
+        git diff --staged --quiet || git commit -m "Update StarDict-Lane-Lexicon.zip [automated]"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
