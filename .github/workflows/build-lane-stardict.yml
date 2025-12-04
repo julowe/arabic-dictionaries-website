@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y dictd dictd-dev dictfmt dictzip
+        sudo apt-get install -y dictd dictd-dev dictfmt dictzip libgtk2.0-0
     
     - name: Extract deps.7z
       run: |
@@ -34,7 +34,7 @@ jobs:
     
     - name: Make tabfile executable
       run: |
-        chmod +x deps/tabfile
+        chmod +x deps/deps/tabfile
       working-directory: ${{ github.workspace }}
     
     - name: Run conversion script
@@ -42,7 +42,7 @@ jobs:
         python3 convert_to_stardict.py \
           --source-dir ../source-lane \
           --output-dir ./output \
-          --tabfile ../../deps/tabfile
+          --tabfile ../../deps/deps/tabfile
       working-directory: ${{ github.workspace }}/Lane-Arabic-English-Lexicon/toStarDict
     
     - name: List generated files

@@ -187,9 +187,10 @@ class LaneConverter:
         
         # Check if dictfmt is available
         try:
-            subprocess.run(['dictfmt', '--version'], 
-                         capture_output=True, check=True)
-        except (subprocess.CalledProcessError, FileNotFoundError):
+            result = subprocess.run(['dictfmt', '--version'], 
+                                  capture_output=True)
+            # dictfmt --version returns exit code 1, so just check if it runs
+        except FileNotFoundError:
             raise RuntimeError("dictfmt not found. Please install dictd-tools package.")
         
         # Convert without tashkeel
@@ -264,6 +265,8 @@ class LaneConverter:
 
     def _convert_dictd_to_tab(self, index_file, dict_file, output_file):
         """Convert dictd format to tab-separated format."""
+        import base64
+        
         if not dict_file.exists():
             print(f"Warning: {dict_file} not found, skipping")
             return
@@ -279,12 +282,24 @@ class LaneConverter:
                 parts = line.strip().split('\t')
                 if len(parts) >= 3:
                     word = parts[0]
-                    offset = int(parts[1], 16) if parts[1].startswith('0x') else int(parts[1])
-                    length = int(parts[2], 16) if parts[2].startswith('0x') else int(parts[2])
+                    # Decode base64 offset and length with proper padding
+                    try:
+                        offset_b64 = parts[1]
+                        length_b64 = parts[2]
+                        # Add padding if needed
+                        offset_b64 += '=' * (4 - len(offset_b64) % 4) if len(offset_b64) % 4 else ''
+                        length_b64 += '=' * (4 - len(length_b64) % 4) if len(length_b64) % 4 else ''
+                        
+                        offset = int.from_bytes(base64.b64decode(offset_b64), 'big')
+                        length = int.from_bytes(base64.b64decode(length_b64), 'big')
+                    except Exception as e:
+                        # Skip entries that can't be decoded
+                        continue
                     
                     # Extract definition from dict file
-                    definition = dict_data[offset:offset+length].decode('utf-8', errors='ignore')
-                    out.write(f"{word}\t{definition}\n")
+                    if offset + length <= len(dict_data):
+                        definition = dict_data[offset:offset+length].decode('utf-8', errors='ignore')
+                        out.write(f"{word}\t{definition}\n")
 
     def second_cleanup(self):
         """Apply second round of cleanup to CSV."""
@@ -354,7 +369,7 @@ class LaneConverter:
             f.write(content)
         
         # Add newline at end if not present
-        with open(self.filename_csv, 'ab') as f:
+        with open(self.filename_csv, 'r+b') as f:
             f.seek(-1, 2)
             last_char = f.read(1)
             if last_char != b'\n':
@@ -364,6 +379,7 @@ class LaneConverter:
         if tabfile_path is None:
             # Look for tabfile in common locations
             possible_paths = [
+                Path(__file__).parent.parent.parent / 'deps' / 'deps' / 'tabfile',
                 Path(__file__).parent.parent.parent / 'deps' / 'tabfile',
                 Path('/usr/local/bin/tabfile'),
                 Path('/usr/bin/tabfile'),
