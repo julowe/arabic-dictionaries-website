@@ -3,7 +3,6 @@
 Tests for Lane Lexicon StarDict converter.
 """
 
-import base64
 import shutil
 import tempfile
 import unittest
@@ -139,32 +138,6 @@ class TestLaneConverter(unittest.TestCase):
         self.assertIn('</FONT>', content)
         self.assertNotIn('HI_OPEN', content)
         self.assertNotIn('FOREIGNOPEN', content)
-
-    def test_convert_dictd_to_tab(self):
-        """Test dictd to tab conversion helper."""
-        converter = LaneConverter(self.source_dir, self.output_dir)
-        
-        # Create mock index file with proper base64 encoded offsets/lengths
-        index_file = self.output_dir / "test.index"
-        # Encode offset 0 and length 5 in base64
-        offset_b64 = base64.b64encode((0).to_bytes(2, 'big')).decode('ascii').rstrip('=')
-        length_b64 = base64.b64encode((5).to_bytes(1, 'big')).decode('ascii').rstrip('=')
-        
-        with open(index_file, 'w', encoding='utf-8') as f:
-            f.write(f"word1\t{offset_b64}\t{length_b64}\n")
-        
-        # Create mock dict file
-        dict_file = self.output_dir / "test.dict"
-        with open(dict_file, 'wb') as f:
-            f.write(b"def1 ")
-        
-        output_file = self.output_dir / "test.txt"
-        converter._convert_dictd_to_tab(index_file, dict_file, output_file)
-        
-        self.assertTrue(output_file.exists())
-        with open(output_file, 'r', encoding='utf-8') as f:
-            content = f.read()
-        self.assertIn('word1', content)
 
     def test_clean_up(self):
         """Test cleanup of temporary files."""

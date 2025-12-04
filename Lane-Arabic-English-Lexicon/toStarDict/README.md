@@ -5,28 +5,33 @@ This directory contains a Python script to convert Lane Arabic-English Lexicon X
 ## Requirements
 
 - Python 3.6+
+- `pyglossary` (Python package)
 - `dictfmt` (from dictd package)
 - `dictzip` (from dictd package)
-- `tabfile` binary (included in deps.7z)
+- `tabfile` binary (included in deps.zip)
 - GTK2 libraries (for tabfile)
 
 ### Installing Dependencies on Ubuntu/Debian
 
 ```bash
-sudo apt-get install dictd dictfmt dictzip libgtk2.0-0 p7zip-full
+# Install system dependencies
+sudo apt-get install dictd dictfmt dictzip libgtk2.0-0
+
+# Install Python dependencies
+pip install -r requirements.txt
 ```
 
 ## Usage
 
 ```bash
 # Extract dependencies
-7z x ../../deps.7z -o../../deps
+unzip ../../deps.zip -d ../..
 
 # Run the conversion
 python3 convert_to_stardict.py \
   --source-dir ../source-lane \
   --output-dir ./output \
-  --tabfile ../../deps/deps/tabfile
+  --tabfile ../../deps/tabfile
 ```
 
 ### Command Line Options
@@ -72,7 +77,7 @@ The script performs the following steps:
 1. **Merge XML Files**: Combines all XML files from the source directory
 2. **First Cleanup**: Removes XML tags and performs text transformations
 3. **Convert to dictd**: Uses dictfmt to create dictd format files
-4. **Convert to CSV**: Extracts entries from dictd format to tab-separated format
+4. **Convert to CSV**: Uses pyglossary to convert dictd format to tab-separated format
 5. **Second Cleanup**: Applies additional text transformations
 6. **Add Colors**: Adds HTML formatting for better display
 7. **Convert to StarDict**: Uses tabfile to create final StarDict files

@@ -25,20 +25,24 @@ jobs:
       with:
         python-version: '3.11'
     
-    - name: Install dependencies
+    - name: Install Python dependencies
+      run: |
+        pip install -r requirements.txt
+      working-directory: ${{ github.workspace }}/Lane-Arabic-English-Lexicon/toStarDict
+    
+    - name: Install system dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y dictd dictfmt dictzip libgtk2.0-0
     
-    - name: Extract deps.7z
+    - name: Extract deps.zip
       run: |
-        sudo apt-get install -y p7zip-full
-        7z x deps.7z -odeps
+        unzip deps.zip -d .
       working-directory: ${{ github.workspace }}
     
     - name: Make tabfile executable
       run: |
-        chmod +x deps/deps/tabfile
+        chmod +x deps/tabfile
       working-directory: ${{ github.workspace }}
     
     - name: Run conversion script
@@ -46,7 +50,7 @@ jobs:
         python3 convert_to_stardict.py \
           --source-dir ../source-lane \
           --output-dir ./output \
-          --tabfile ../../deps/deps/tabfile
+          --tabfile ../../deps/tabfile
       working-directory: ${{ github.workspace }}/Lane-Arabic-English-Lexicon/toStarDict
     
     - name: List generated files

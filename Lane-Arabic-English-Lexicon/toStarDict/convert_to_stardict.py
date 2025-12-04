@@ -231,9 +231,14 @@ class LaneConverter:
         """Convert dictd format to CSV using pyglossary."""
         print("Stage 3: Converting to CSV with pyglossary")
         
-        # Note: This step requires pyglossary to be installed
-        # For now, we'll implement a simple alternative that reads the dictd format
-        # and converts to CSV
+        # Check if pyglossary is available
+        try:
+            subprocess.run(['pyglossary', '--version'], 
+                         capture_output=True, check=False)
+        except FileNotFoundError:
+            raise RuntimeError(
+                "pyglossary not found. Please install it with: pip install pyglossary"
+            )
         
         no_tashkeel_index = self.output_dir / "lane-lexicon-no-tashkeel.index"
         tashkeel_index = self.output_dir / "lane-lexicon-tashkeel.index"
@@ -241,14 +246,17 @@ class LaneConverter:
         no_tashkeel_txt = self.output_dir / "lane-lexicon-no-tashkeel.txt"
         tashkeel_txt = self.output_dir / "lane-lexicon-tashkeel.txt"
         
-        # Simple conversion from dictd index format to tab-separated format
+        # Convert using pyglossary command line (like the original bash script)
         for index_file, output_file in [
             (no_tashkeel_index, no_tashkeel_txt),
             (tashkeel_index, tashkeel_txt)
         ]:
             if index_file.exists():
-                dict_file = index_file.with_suffix('.dict')
-                self._convert_dictd_to_tab(index_file, dict_file, output_file)
+                subprocess.run([
+                    'pyglossary',
+                    str(index_file),
+                    str(output_file)
+                ], check=True)
         
         # Combine the two files
         with open(self.filename_csv, 'w', encoding='utf-8') as outfile:
@@ -260,44 +268,6 @@ class LaneConverter:
                     outfile.write(infile.read())
         
         print("CSV conversion completed")
-
-    def _convert_dictd_to_tab(self, index_file, dict_file, output_file):
-        """Convert dictd format to tab-separated format."""
-        import base64
-        
-        if not dict_file.exists():
-            print(f"Warning: {dict_file} not found, skipping")
-            return
-        
-        with open(dict_file, 'rb') as df:
-            dict_data = df.read()
-        
-        with open(index_file, 'r', encoding='utf-8') as idx:
-            index_lines = idx.readlines()
-        
-        with open(output_file, 'w', encoding='utf-8') as out:
-            for line in index_lines:
-                parts = line.strip().split('\t')
-                if len(parts) >= 3:
-                    word = parts[0]
-                    # Decode base64 offset and length with proper padding
-                    try:
-                        offset_b64 = parts[1]
-                        length_b64 = parts[2]
-                        # Add padding if needed
-                        offset_b64 += '=' * (4 - len(offset_b64) % 4) if len(offset_b64) % 4 else ''
-                        length_b64 += '=' * (4 - len(length_b64) % 4) if len(length_b64) % 4 else ''
-                        
-                        offset = int.from_bytes(base64.b64decode(offset_b64), 'big')
-                        length = int.from_bytes(base64.b64decode(length_b64), 'big')
-                    except Exception as e:
-                        # Skip entries that can't be decoded
-                        continue
-                    
-                    # Extract definition from dict file
-                    if offset + length <= len(dict_data):
-                        definition = dict_data[offset:offset+length].decode('utf-8', errors='ignore')
-                        out.write(f"{word}\t{definition}\n")
 
     def second_cleanup(self):
         """Apply second round of cleanup to CSV."""
@@ -377,7 +347,6 @@ class LaneConverter:
         if tabfile_path is None:
             # Look for tabfile in common locations
             possible_paths = [
-                Path(__file__).parent.parent.parent / 'deps' / 'deps' / 'tabfile',
                 Path(__file__).parent.parent.parent / 'deps' / 'tabfile',
                 Path('/usr/local/bin/tabfile'),
                 Path('/usr/bin/tabfile'),
