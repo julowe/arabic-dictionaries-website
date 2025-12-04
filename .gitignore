@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist-python/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Temporary conversion files
+Lane-Arabic-English-Lexicon/toStarDict/output/
+Lane-Arabic-English-Lexicon/toStarDict/lane-lexicon.xml
+Lane-Arabic-English-Lexicon/toStarDict/lane-lexicon.csv
+Lane-Arabic-English-Lexicon/toStarDict/*.dict
+Lane-Arabic-English-Lexicon/toStarDict/*.dict.dz
+Lane-Arabic-English-Lexicon/toStarDict/*.idx
+Lane-Arabic-English-Lexicon/toStarDict/*.ifo
+Lane-Arabic-English-Lexicon/toStarDict/*.index
+Lane-Arabic-English-Lexicon/toStarDict/lane-lexicon-*.txt
+Lane-Arabic-English-Lexicon/toStarDict/StarDict-Lane-Lexicon/
+Lane-Arabic-English-Lexicon/toStarDict/StarDict-Lane-Lexicon.zip
+
+# Dependencies
+deps/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
