@@ -1,0 +1,1 @@
+pyglossary>=4.6.0
